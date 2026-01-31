@@ -15,19 +15,19 @@ COUNTRIES = {
     "MO": "Macao"
 }
 
-# Indicateur pour le PIB en dollars américains courants
+# Indicateurs de la Banque Mondiale
 GDP_INDICATOR = {"NY.GDP.MKTP.CD": "PIB"}
+POPULATION_INDICATOR = {"SP.POP.TOTL": "Population"}
 
-def fetch_gdp_data(countries, indicator, start_year, end_year):
+def fetch_wb_data(countries, indicator, start_year, end_year):
     """
-    Récupère les données du PIB pour les pays et la période spécifiés.
+    Récupère les données de la Banque Mondiale pour les pays et la période spécifiés.
     """
     try:
-        # wbdata.get_dataframe attend une liste de codes pays
-        gdp_data = wbdata.get_dataframe(indicator, country=countries, date=(str(start_year), str(end_year)))
-        return gdp_data
+        data = wbdata.get_dataframe(indicator, country=countries, date=(str(start_year), str(end_year)))
+        return data
     except Exception as e:
-        print(f"Une erreur est survenue lors de la récupération des données : {e}")
+        print(f"Une erreur est survenue lors de la récupération des données pour {list(indicator.values())[0]}: {e}")
         return None
 
 def plot_gdp_data(data, country_names_map):
@@ -38,7 +38,6 @@ def plot_gdp_data(data, country_names_map):
     fig, ax = plt.subplots(figsize=(12, 8))
 
     for country_code in data.columns:
-        # Utilise le mapping pour obtenir le nom français pour la légende
         label = country_names_map.get(country_code, country_code)
         ax.plot(data.index, data[country_code] / 1e12, label=label, marker='o', linestyle='-')
 
@@ -49,15 +48,40 @@ def plot_gdp_data(data, country_names_map):
     ax.grid(True)
     plt.tight_layout()
     
-    # Sauvegarde du graphique
     plt.savefig("gdp_comparison.png")
     print("\nLe graphique de comparaison des PIB a été sauvegardé sous 'gdp_comparison.png'")
 
+def process_and_display_data(data, column_name, display_name, country_map, unit_divisor=1, unit_name="", sort_ascending=False, float_format="{:,.2f}"):
+    """
+    Traite les données et affiche un classement.
+    """
+    if data is None or data.empty:
+        print(f"Aucune donnée disponible pour {display_name}.")
+        return None
+    
+    pivot = data.unstack(level=0)[column_name]
+    cleaned_data = pivot.dropna(how='all', axis=0).dropna(how='all', axis=1)
+
+    if cleaned_data.empty:
+        print(f"Aucune donnée de {display_name} disponible pour la période sélectionnée après nettoyage.")
+        return None
+
+    print(f"\nDernières données de {display_name} disponibles :")
+    latest_data = cleaned_data.ffill().iloc[-1] / unit_divisor
+    
+    df = pd.DataFrame(latest_data)
+    df.columns = [f"{display_name} ({unit_name})"]
+    df.index.name = "Pays"
+    df.index = df.index.map(country_map)
+
+    print(df.sort_values(by=df.columns[0], ascending=sort_ascending).to_string(float_format=float_format))
+    return cleaned_data
+
 def main():
     """
-    Fonction principale pour analyser et comparer les PIB.
+    Fonction principale pour analyser et comparer les données des pays.
     """
-    print("Analyse et comparaison des PIB des pays d'Asie de l'Est")
+    print("Analyse et comparaison des données des pays d'Asie de l'Est")
     print("Source des données : Banque Mondiale")
     
     start_year = 2000
@@ -65,38 +89,16 @@ def main():
     
     country_codes = list(COUNTRIES.keys())
     
-    gdp_data = fetch_gdp_data(country_codes, GDP_INDICATOR, start_year, end_year)
-    
-    if gdp_data is None or gdp_data.empty:
-        print("Échec de la récupération des données ou aucune donnée disponible.")
-        return
-    
-    # Pivoter les données pour avoir les pays en colonnes
-    gdp_pivot = gdp_data.unstack(level=0)['PIB']
+    # Traitement du PIB
+    gdp_data = fetch_wb_data(country_codes, GDP_INDICATOR, start_year, end_year)
+    gdp_pivot_cleaned = process_and_display_data(gdp_data, 'PIB', 'PIB', COUNTRIES, unit_divisor=1e9, unit_name="milliards $")
 
-    # Supprimer les lignes (années) et colonnes (pays) entièrement vides
-    gdp_pivot_cleaned = gdp_pivot.dropna(how='all', axis=0).dropna(how='all', axis=1)
+    if gdp_pivot_cleaned is not None:
+        plot_gdp_data(gdp_pivot_cleaned, COUNTRIES)
 
-    if gdp_pivot_cleaned.empty:
-        print("Aucune donnée de PIB disponible pour la période sélectionnée après nettoyage.")
-        return
-
-    # Afficher les données les plus récentes
-    print("\nDernières données de PIB disponibles (en milliards de $ US) :")
-    latest_gdp = gdp_pivot_cleaned.ffill().iloc[-1] / 1e9
-    
-    # Créer un DataFrame pour un affichage propre
-    latest_gdp_df = pd.DataFrame(latest_gdp)
-    latest_gdp_df.columns = ["PIB (milliards $)"]
-    latest_gdp_df.index.name = "Pays"
-    
-    # Remplacer les codes pays par les noms complets pour l'affichage
-    latest_gdp_df.index = latest_gdp_df.index.map(COUNTRIES)
-
-    print(latest_gdp_df.sort_values(by="PIB (milliards $)", ascending=False).to_string(float_format="{:,.2f}".format))
-
-    # Génération du graphique
-    plot_gdp_data(gdp_pivot_cleaned, COUNTRIES)
+    # Traitement de la population
+    population_data = fetch_wb_data(country_codes, POPULATION_INDICATOR, start_year, end_year)
+    process_and_display_data(population_data, 'Population', 'Population', COUNTRIES, unit_divisor=1e6, unit_name="millions", float_format="{:,.0f}")
 
 if __name__ == "__main__":
     main()
