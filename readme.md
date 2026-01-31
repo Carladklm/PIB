@@ -1,13 +1,17 @@
-# Analyseur de PIB des pays d'Asie de l'Est
+# Analyseur de Données des Pays d'Asie de l'Est
 
-Ce projet contient un script Python qui analyse et compare les Produits Intérieurs Bruts (PIB) des pays d'Asie de l'Est. Les données sont récupérées dynamiquement depuis l'API de la Banque Mondiale.
+Ce projet contient un script Python qui analyse et compare des indicateurs économiques et démographiques clés pour les pays d'Asie de l'Est. Les données sont récupérées dynamiquement depuis l'API de la Banque Mondiale.
 
 ## Fonctionnalités
 
-- Récupère les données du PIB (en dollars américains courants) pour les pays d'Asie de l'Est.
-- Affiche un tableau avec les dernières données de PIB disponibles pour chaque pays.
-- Génère un graphique linéaire montrant l'évolution du PIB pour chaque pays au cours des 20 dernières années.
-- Sauvegarde le graphique sous forme de fichier image (`gdp_comparison.png`).
+- **Analyse du PIB :**
+    - Récupère les données du PIB (en dollars américains courants).
+    - Affiche un tableau classant les pays par leur dernier PIB disponible.
+    - Génère un graphique linéaire (`gdp_comparison.png`) montrant l'évolution du PIB pour chaque pays.
+
+- **Analyse de la Population :**
+    - Récupère les données démographiques totales.
+    - Affiche un tableau classant les pays par leur nombre d'habitants le plus récent.
 
 ## Pays analysés
 
@@ -21,7 +25,7 @@ Le script analyse les pays suivants :
 - Hong Kong
 - Macao
 
-*Note : Les données pour certains pays (comme la Corée du Nord et Taïwan) peuvent ne pas être disponibles dans la base de données de la Banque Mondiale.*
+*Note : Les données pour certains pays (comme la Corée du Nord et Taïwan) peuvent ne pas être disponibles dans la base de données de la Banque Mondiale, auquel cas ils n'apparaîtront pas dans les classements.*
 
 ## Comment utiliser
 
@@ -47,14 +51,15 @@ Pour lancer l'analyse, exécutez le script `main.py` depuis votre terminal :
 python3 main.py
 ```
 
-Le script affichera le tableau des PIB dans la console et générera le fichier `gdp_comparison.png` dans le même répertoire.
+Le script affichera les tableaux de classement dans la console et générera le fichier `gdp_comparison.png`.
 
 ## Exemple de sortie
 
-Le script produira un tableau similaire à celui-ci dans la console :
+Le script produira des tableaux similaires à ceux-ci dans la console :
 
+**Classement par PIB :**
 ```
-Dernières données de PIB disponibles (en milliards de $ US) :
+Dernières données de PIB disponibles :
                PIB (milliards $)
 Pays
 Chine                  18,316.77
@@ -63,7 +68,20 @@ Corée du Sud            1,799.36
 Hong Kong                 358.68
 Macao                      24.93
 Mongolie                   17.15
-Corée du Nord                NaN
+```
+
+**Classement par Population :**
+```
+Dernières données de Population disponibles :
+              Population (millions)
+Pays
+Chine                         1,425
+Japon                           125
+Corée du Sud                     51
+Corée du Nord                    26
+Hong Kong                         7
+Mongolie                          3
+Macao                             1
 ```
 
 De plus, une image nommée `gdp_comparison.png` sera créée, montrant l'évolution des PIB.
